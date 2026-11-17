@@ -1,0 +1,13 @@
+{
+  "name": "codexing",
+  "version": "0.1.0",
+  "description": "Run your installed Codex CLI with a selected local or self-hosted Responses API model.",
+  "type": "module",
+  "bin": { "codexing": "bin/codexing.js" },
+  "files": ["bin", "lib", "docs"],
+  "scripts": { "test": "node --test test/*.test.js", "test:native": "node --test test/native.integration.js" },
+  "engines": { "node": ">=22" },
+  "license": "UNLICENSED",
+  "repository": { "type": "git", "url": "git+https://github.com/hikaMaeng/codexing.git" },
+  "keywords": ["codex", "cli", "responses-api", "lm-studio", "local-llm", "mcp"]
+}
