@@ -4,7 +4,7 @@ import { once } from 'node:events';
 /** Exercise the native JSONL protocol without rewriting service/auth responses. */
 export function appServer(command, args, options = {}) {
   const child = spawn(command, args, { ...options, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
-  let sequence = 0, buffer = '', stderr = '';
+  let sequence = 0, buffer = '', stderr = '', closing;
   const pending = new Map(), notifications = [];
   const listeners = new Set();
   child.stdout.on('data', data => {
@@ -45,13 +45,17 @@ export function appServer(command, args, options = {}) {
         listeners.add(listener);
       });
     },
-    async close() {
-      if (child.exitCode !== null) return;
-      const exited = once(child, 'exit');
-      child.stdin.end();
-      const timer = setTimeout(() => child.kill(), 2000);
-      await exited;
-      clearTimeout(timer);
+    close() {
+      // Signal exits have exitCode=null. Reusing the same close promise also
+      // makes the test's final cleanup safe after an explicit provider switch.
+      closing ??= (async () => {
+        if (child.exitCode !== null || child.signalCode !== null) return;
+        const exited = once(child, 'exit');
+        child.stdin.end();
+        const timer = setTimeout(() => child.kill(), 2000);
+        try { await exited; } finally { clearTimeout(timer); }
+      })();
+      return closing;
     },
   };
 }
