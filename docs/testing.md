@@ -32,3 +32,12 @@ README의 명령/API/보안 경계는 테스트와 함께 유지한다. 네이�
 - `model_catalog_json` 없이 model만 지정하면 로컬 ID가 native model/list에 추가되지 않음을 확인. app-server의 --profile 미지원도 실제 실행으로 확인하여 IDE 전용 CODEX_HOME으로 설정 저장을 격리함.
 
 GUI 성공·native protocol 성공·mock 결과·실제 서버 결과를 합쳐 보고하지 않는다. 모드/서버 그룹 전환 뒤 새 프로세스와 새 대화가 필요하다. [전체 지원 범위](vscode.md).
+
+## 2026-11-19 채팅 모드 전환
+
+- 기본 문법은 `/vscode on`, `/vscode off`, `/vscode uninstall`. 기존 `--openai`, `--off`, 인자 없는 실행과 `unregister` 호환 별칭을 검사한다.
+- 세션 `UserPromptSubmit` 훅은 공식 hooks/list에서 미신뢰 상태로 나타난다. 통합 검사의 일회용 홈에서만 공식 Review Hooks와 같은 config/batchWrite로 신뢰를 저장한다. 제품 코드는 신뢰 해시나 기능 플래그를 쓰지 않는다.
+- 실제 번들 app-server의 turn/start에서 로컬 모드 on/off, OpenAI 모드 on을 검사한다. 명령별 상태 변경, 모델 요청 증가 0건, 재로드 안내를 확인한다. 신뢰된 훅을 거친 일반 메시지는 Responses 요청을 보낸다. 기존 사용자 hooks.json과 인증 바이트도 보존한다.
+- Windows 작업 폴더에 가짜 node.exe/node.cmd를 두고 핀한 Node와 현재 폴더 검색 차단을 검사한다. 훅 입력 JSON 한 건을 받은 뒤 EOF 없이 종료하는 회귀 검사도 포함한다.
+- 이 PC에서는 새 프로세스 시작이 수 초~수십 초 지연되어 기존 CLI/어댑터 검사에도 시간 초과가 발생했다. IDE 초기화와 훅 검사는 시작 지연을 포함한 별도 기한을 사용한다. 기존 CLI 검사의 성공 기준은 변경하지 않는다. 전체 기본 검사와 패키징은 저장소의 Windows/Ubuntu CI에서도 확인한다.
+- 그래픽 창의 AX 상태는 읽었으나 입력·화면 캡처 지연으로 클릭 검증은 완료하지 못하고 화면 제어를 해제했다. 프로토콜 성공을 GUI 성공으로 취급하지 않는다.

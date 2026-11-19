@@ -25,7 +25,7 @@ async function main(argv) {
 
 Usage: codexing [--select-model <index|model-id>] [folder] [--] [Codex options]
        codexing --init [base-url model-id]
-       codexing /vscode [--select-model <index|id> | --openai | --off | --status]
+  codexing /vscode [on [--select-model <index|id>] | off | uninstall | --status]
 
 Config: ${configPath}
 Optional MCP: ${mcpPath}

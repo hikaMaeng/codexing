@@ -39,6 +39,10 @@ command/url은 정확히 하나가 필요하다. 상대 MCP 경로는 선택한 
 
 ## VS Code 진입점
 
-`codexing /vscode [--select-model <index|id> | --openai | --off | --status] [--settings <User/settings.json>] [--extension <official-extension-directory>]`
+`codexing /vscode [on [--select-model <index|id>] | off | uninstall | --status] [--settings <User/settings.json>] [--extension <official-extension-directory>]`
 
-`/vscode`는 첫 인자일 때만 관리 명령으로 처리한다. `--on`은 기본 동작의 명시형이다. 모드 변경은 다음 app-server에 적용되며 CLI 실행의 모델/환경은 바꾸지 않는다. `~/.codexing/vscode.json`에 enabled/modelSelector/nativeExecutable/extensionPath/providerNamespace를 저장한다. 상세 동작·스냅샷·지원 버전은 [vscode.md](vscode.md)를 따른다.
+`/vscode`는 첫 인자일 때만 관리 명령으로 처리한다. 생략·`--on`은 `on`, `--openai`는 `off`, 기존 `--off`·`unregister`는 `uninstall`의 호환 별칭이다. `off`는 등록을 유지하며 원래 OpenAI 연결을 선택한다. 모드 변경은 다음 app-server에 적용되며 CLI 실행의 모델/환경은 바꾸지 않는다. `~/.codexing/vscode.json`에 enabled/modelSelector/nativeExecutable/extensionPath/providerNamespace를 저장한다.
+
+공식 확장 어댑터는 두 모드 모두 루트 세션 플래그 `hooks.UserPromptSubmit`에 정적 명령 훅을 추가한다. 일반 CLI에는 추가하지 않는다. 기존 사용자·프로젝트·관리형 훅 소스는 네이티브가 별도로 결합한다. 호출자가 동일한 세션 훅을 정의하면 덮어쓰지 않고 시작을 중단한다. 훅 활성화·신뢰를 우회하지 않는다.
+
+훅은 어댑터가 넘긴 `CODEXING_VSCODE_CONTROL_HOME`, `CODEXING_VSCODE_CONTROL_NAMESPACE`와 등록 소유권을 확인한다. `hook_event_name=UserPromptSubmit`이고 prompt 전체가 `codexing /vscode on` 또는 `codexing /vscode off`와 정확히 같을 때만 JS 모드 API를 호출한다. 프롬프트를 셸에 넣지 않으며 실패도 `decision=block`으로 모델 전송을 차단한다. 다른 메시지는 `{}`로 통과한다. 상세 동작·신뢰 절차·스냅샷·지원 버전은 [vscode.md](vscode.md)를 따른다.

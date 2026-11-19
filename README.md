@@ -34,18 +34,22 @@ OpenAI가 게시한 **Codex – OpenAI's coding agent** (`openai.chatgpt`)를 �
 ```sh
 npm install -g github:hikaMaeng/codexing
 codexing --init http://127.0.0.1:1234/v1 your-model-id
-codexing /vscode
+codexing /vscode on
 ```
 
 대상 VS Code 창에서 **Developer: Reload Window**를 실행하고 새 Codex 대화를 여세요. 네이티브 모델 목록에는 `Codexing · your-model-id`가 제공됩니다. 확장 화면에서도 해당 항목을 확인한 뒤 짧게 요청하세요. Codexing 모드는 OpenAI 로그인 없이 사용하며, 서버 자체 토큰이 필요하면 기존 `config.json`의 `authToken`을 지정합니다. 기존 설정 파일이 있으면 `--init`은 보존합니다.
 
 | 원하는 작업 | 명령 | 이후 할 일 |
 | --- | --- | --- |
-| Codexing 연결 | `codexing /vscode` | 창 재로드·새 대화 |
-| 다른 모델/서버 그룹 | `codexing /vscode --select-model 2` | 창 재로드·새 대화 |
-| 원래 OpenAI 계정·모델 | `codexing /vscode --openai` | 창 재로드·새 대화 |
+| Codexing 연결 | `codexing /vscode on` | 창 재로드·새 대화 |
+| 다른 모델/서버 그룹 | `codexing /vscode on --select-model 2` | 창 재로드·새 대화 |
+| 원래 OpenAI 계정·모델 | `codexing /vscode off` | 창 재로드·새 대화 |
 | 현재 등록 상태 | `codexing /vscode --status` | 변경 없음 |
-| 기존 실행파일 설정 복원 | `codexing /vscode --off` | 대상 창 재로드 |
+| 기존 실행파일 설정 복원 | `codexing /vscode uninstall` | 대상 창 재로드 |
+
+첫 등록 후 공식 Codex의 Hooks 설정에서 **Checking Codexing mode command** 항목을 검토하고 신뢰하면, **그래픽 채팅 입력란**에서도 정확히 `codexing /vscode on` 또는 `codexing /vscode off`를 보낼 수 있습니다. 공식 `UserPromptSubmit` 훅이 모드를 저장하고 모델 전달을 차단합니다. 결과 안내 뒤 창을 재로드하고 새 채팅을 시작하세요. 로컬 홈과 OpenAI 홈의 훅 신뢰는 별개이며, 훅이 꺼져 있거나 신뢰되지 않으면 채팅 전환은 작동하지 않습니다. 그 경우 터미널 명령을 사용하세요. 채팅에서 모델 선택 옵션이나 등록 해제는 처리하지 않습니다.
+
+호환 별칭은 `/vscode`·`--on` → `on`, `--openai` → `off`, **기존 `--off` → `uninstall`**입니다. `unregister`도 등록 해제입니다.
 
 **같은 URL·인증·컨텍스트의 모델들은 공식 모델 선택기에서 고를 수 있습니다.** 다른 서버나 OpenAI 모드 전환은 다음 app-server 프로세스에 적용합니다. 공식 패널 안에 별도 ON/OFF 버튼을 추가하거나 실행 중인 대화를 다른 provider로 바꾸지는 않습니다.
 

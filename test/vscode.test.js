@@ -8,6 +8,7 @@ import { fixture, defaultModel } from './helpers.js';
 import { parseSettings, editSetting } from '../lib/jsonc.js';
 import { setupVSCode, replaceChecked, createVSCodeWrapper } from '../lib/vscode-setup.js';
 import { vscodeLaunch, vscodeModels } from '../lib/vscode.js';
+import { handleVSCodePrompt } from '../lib/vscode-hook.js';
 
 function officialExtension(f) {
   const root = join(f.home, '.vscode', 'extensions', 'openai.chatgpt-1.0.0');
@@ -63,8 +64,13 @@ test('registration restores exact original bytes and leaves Codexing/model/nativ
   assert.equal(parseSettings(readFileSync(settings, 'utf8')).value['chatgpt.cliExecutable'], setup.wrapper);
   await setupVSCode(['--openai'], { home: f.home });
   const native = await vscodeLaunch(['-c', 'features.code_mode_host=true', 'app-server', '--analytics-default-enabled'], { home: f.home, cwd: f.cwd, env: { OPENAI_API_KEY: 'sentinel', CODEX_HOME: 'keep-home' } });
-  assert.deepEqual(native.args, ['-c', 'features.code_mode_host=true', 'app-server', '--analytics-default-enabled']);
-  assert.deepEqual(native.env, { OPENAI_API_KEY: 'sentinel', CODEX_HOME: 'keep-home' });
+  assert.deepEqual(native.args.slice(0, 2), ['-c', 'features.code_mode_host=true']);
+  assert.deepEqual(native.args.slice(-2), ['app-server', '--analytics-default-enabled']);
+  assert.ok(native.args.some(arg => arg.startsWith('hooks.UserPromptSubmit=')));
+  assert.equal(native.env.OPENAI_API_KEY, 'sentinel');
+  assert.equal(native.env.CODEX_HOME, 'keep-home');
+  assert.equal(native.env.CODEXING_VSCODE_CONTROL_HOME, f.home);
+  if (process.platform === 'win32') assert.equal(native.env.NoDefaultCurrentDirectoryInExePath, '1');
   await setupVSCode(['--off'], { home: f.home });
   assert.deepEqual(readFileSync(settings), original);
   assert.deepEqual(readFileSync(modelFile), modelBytes);
@@ -107,6 +113,9 @@ test('app-server launch keeps protocol argv/stdin contract and applies private t
   assert.equal(launch.env.OPENAI_API_KEY, undefined);
   assert.ok(launch.env.CODEX_HOME.startsWith(join(f.home, '.codexing', 'vscode', 'codex-home-')));
   assert.ok(!launch.args.join(' ').includes(defaultModel.authToken));
+  for (const arg of ['hooks.UserPromptSubmit=[]', '--config=hooks.UserPromptSubmit=[]', '"hooks"."UserPromptSubmit"=[]']) {
+    await assert.rejects(vscodeLaunch(['-c', arg, 'app-server'], { home: f.home, cwd: f.cwd, env: {} }), /already defines/);
+  }
   const catalogArg = launch.args.find(arg => arg.startsWith('model_catalog_json='));
   const catalog = JSON.parse(readFileSync(JSON.parse(catalogArg.split('=').slice(1).join('=')), 'utf8'));
   assert.equal(catalog.models[0].slug, defaultModel.model);
@@ -145,6 +154,38 @@ test('same-wrapper mode change does not rewrite VS Code settings', async () => {
   assert.deepEqual(readFileSync(file), old);
 });
 
+test('positional on/off and unregister keep legacy alias semantics; exact chat commands only change owned mode', async () => {
+  const f = fixture(); officialExtension(f);
+  const file = join(f.root, 'settings.json');
+  writeFileSync(file, '{}');
+  const setup = await setupVSCode(['on', '--settings', file], { home: f.home });
+  const originalSettings = readFileSync(file);
+  const stateFile = join(f.home, '.codexing', 'vscode.json');
+  const enabled = () => JSON.parse(readFileSync(stateFile)).enabled;
+  const env = { CODEXING_VSCODE_CONTROL_HOME: f.home, CODEXING_VSCODE_CONTROL_NAMESPACE: setup.state.providerNamespace };
+  const event = prompt => ({ hook_event_name: 'UserPromptSubmit', prompt });
+  for (const text of ['codexing /vscode off\n', ' codexing /vscode off', 'codexing /vscode off; echo injected', 'Explain codexing /vscode off', 'codexing /vscode uninstall']) {
+    assert.deepEqual(await handleVSCodePrompt(event(text), env), {});
+    assert.equal(enabled(), true);
+  }
+  assert.deepEqual(await handleVSCodePrompt(event('codexing /vscode off'), {}), {});
+  assert.deepEqual(await handleVSCodePrompt({ ...event('codexing /vscode off'), hook_event_name: 'Stop' }, env), {});
+  assert.equal((await handleVSCodePrompt(event('codexing /vscode off'), env)).decision, 'block');
+  assert.equal(enabled(), false);
+  assert.equal((await handleVSCodePrompt(event('codexing /vscode on'), env)).decision, 'block');
+  assert.equal(enabled(), true);
+  assert.deepEqual(readFileSync(file), originalSettings);
+  await setupVSCode(['off'], { home: f.home }); assert.equal(enabled(), false);
+  await setupVSCode(['--on'], { home: f.home }); assert.equal(enabled(), true);
+  await setupVSCode(['--openai'], { home: f.home }); assert.equal(enabled(), false);
+  await assert.rejects(setupVSCode(['on', 'off'], { home: f.home }), /Choose one/);
+  await assert.rejects(setupVSCode(['off', '--select-model', '1'], { home: f.home }), /Choose one/);
+  await setupVSCode(['unregister'], { home: f.home });
+  assert.equal(readFileSync(file, 'utf8'), '{}');
+  const rejected = await handleVSCodePrompt(event('codexing /vscode on'), env);
+  assert.equal(rejected.decision, 'block'); assert.match(rejected.reason, /failed/);
+});
+
 test('native adapter preserves literal argv and byte streams, including Unicode paths and empty arguments', { timeout: 10000 }, async () => {
   const f = fixture(), entry = join(f.root, 'echo-한글.cjs');
   writeFileSync(entry, `process.stdout.write(JSON.stringify(process.argv.slice(2))+'\\n'); const chunks=[];process.stdin.on('data',b=>chunks.push(b));process.stdin.on('end',()=>{process.stdout.write(Buffer.concat(chunks));process.stderr.write('오류 스트림');});`);
@@ -162,4 +203,17 @@ test('native adapter preserves literal argv and byte streams, including Unicode 
   assert.deepEqual(JSON.parse(output.subarray(0, newline).toString('utf8')), args);
   assert.deepEqual(output.subarray(newline + 1), payload);
   assert.equal(Buffer.concat(stderr).toString('utf8'), '오류 스트림');
+});
+
+test('prompt hook consumes one complete JSON event without waiting for stdin EOF', { timeout: 30000 }, async t => {
+  const child = spawn(process.execPath, [join(import.meta.dirname, '..', 'bin', 'codexing-vscode-hook.js')], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], env: {} });
+  t.after(() => { if (child.exitCode === null) child.kill(); });
+  const output = [];
+  child.stdout.on('data', data => output.push(data));
+  const exited = once(child, 'exit');
+  child.stdin.write('{"hook_event_name":"UserPromptSubmit",');
+  child.stdin.write('"prompt":"ordinary message"}');
+  const [code] = await exited;
+  assert.equal(code, 0);
+  assert.deepEqual(JSON.parse(Buffer.concat(output)), {});
 });
