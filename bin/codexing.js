@@ -10,6 +10,7 @@ import { parseArgs, validateArgs } from '../lib/arguments.js';
 import { makeProvider } from '../lib/provider.js';
 import { makeMcp } from '../lib/mcp.js';
 import { superviseChild } from '../lib/lifecycle.js';
+import { setupVSCode } from '../lib/vscode-setup.js';
 
 const configDir = join(homedir(), '.codexing');
 const configPath = join(configDir, 'config.json');
@@ -17,12 +18,14 @@ const mcpPath = join(configDir, 'mcp.json');
 
 /** Launch the installed CLI with child-only overrides and the original terminal. */
 async function main(argv) {
+  if (argv[0] === '/vscode') return setupVSCode(argv.slice(1));
   const parsed = parseArgs(argv);
   if (parsed.action === 'help') {
     console.log(`Codexing — launch your installed Codex CLI with a local/self-hosted Responses API.
 
 Usage: codexing [--select-model <index|model-id>] [folder] [--] [Codex options]
        codexing --init [base-url model-id]
+       codexing /vscode [--select-model <index|id> | --openai | --off | --status]
 
 Config: ${configPath}
 Optional MCP: ${mcpPath}

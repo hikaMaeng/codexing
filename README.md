@@ -15,6 +15,7 @@ Codex CLI와 모델 서버는 사용자가 별도로 설치하고 실행합니�
 | 단계별 사용 예 | [usage](docs/usage.md) |
 | 설정 전달 구조 | [architecture](docs/architecture.md) |
 | 코드 흐름 | [internals](docs/internals.md) |
+| 공식 VS Code 그래픽 채팅 연동 | [vscode](docs/vscode.md) |
 
 ## 무엇이 편해지나요?
 
@@ -24,10 +25,37 @@ Codex CLI와 모델 서버는 사용자가 별도로 설치하고 실행합니�
 - **Codexing 전용 MCP 추가:** 별도 JSON 파일을 네이티브 MCP 설정으로 변환해 해당 실행에만 추가합니다.
 - **원본 설정 보존:** `~/.codex/config.toml`과 인증파일을 덮어쓰지 않습니다. 선택한 연결 설정은 자식 프로세스의 CLI 옵션과 환경변수로 전달합니다.
 - **터미널 그대로 사용:** Codex의 화면·입출력을 그대로 연결하고 종료 코드를 반환합니다. 기본 승인 정책이나 샌드박스 정책을 변경하지 않습니다.
+- **공식 VS Code 채팅 연동:** `/vscode`로 기존 OpenAI Codex 확장에 연결합니다. 같은 연결의 모델은 공식 선택기용 카탈로그로 제공하며, OpenAI 모드 복귀와 등록 해제를 지원합니다.
+
+## 공식 Codex VS Code 채팅에서 사용하기
+
+OpenAI가 게시한 **Codex – OpenAI's coding agent** (`openai.chatgpt`)를 설치한 후 아래 명령을 실행하세요. 새 VSIX나 확장 패치는 사용하지 않습니다.
+
+```sh
+npm install -g github:hikaMaeng/codexing
+codexing --init http://127.0.0.1:1234/v1 your-model-id
+codexing /vscode
+```
+
+대상 VS Code 창에서 **Developer: Reload Window**를 실행하고 새 Codex 대화를 여세요. 네이티브 모델 목록에는 `Codexing · your-model-id`가 제공됩니다. 확장 화면에서도 해당 항목을 확인한 뒤 짧게 요청하세요. Codexing 모드는 OpenAI 로그인 없이 사용하며, 서버 자체 토큰이 필요하면 기존 `config.json`의 `authToken`을 지정합니다. 기존 설정 파일이 있으면 `--init`은 보존합니다.
+
+| 원하는 작업 | 명령 | 이후 할 일 |
+| --- | --- | --- |
+| Codexing 연결 | `codexing /vscode` | 창 재로드·새 대화 |
+| 다른 모델/서버 그룹 | `codexing /vscode --select-model 2` | 창 재로드·새 대화 |
+| 원래 OpenAI 계정·모델 | `codexing /vscode --openai` | 창 재로드·새 대화 |
+| 현재 등록 상태 | `codexing /vscode --status` | 변경 없음 |
+| 기존 실행파일 설정 복원 | `codexing /vscode --off` | 대상 창 재로드 |
+
+**같은 URL·인증·컨텍스트의 모델들은 공식 모델 선택기에서 고를 수 있습니다.** 다른 서버나 OpenAI 모드 전환은 다음 app-server 프로세스에 적용합니다. 공식 패널 안에 별도 ON/OFF 버튼을 추가하거나 실행 중인 대화를 다른 provider로 바꾸지는 않습니다.
+
+등록은 VS Code 사용자 설정의 `chatgpt.cliExecutable` 한 항목을 백업 후 변경합니다. 공식 문서가 개발용이라고 경고하는 옵션에 의존하므로 확장 업데이트 후 재등록·확인이 필요합니다. Codexing 모드는 선택기 저장이 원래 설정·인증을 바꾸지 않도록 전용 Codex 홈을 사용하고, OpenAI 모드는 원래 환경으로 돌아갑니다. 추가 MCP도 기존 `~/.codexing/mcp.json`에서 읽습니다.
+
+Windows의 설치 확장 **26.1111.21308 / app-server 0.169.0-alpha.11.1**에서 로그인 없는 실제 서버 응답과 기존 OpenAI 계정 응답을 확인했습니다. **그래픽 채팅의 최종 클릭 검증은 다른 Windows 보안창으로 막혀 미완료**이며, 프로토콜 응답 성공과 구분합니다. 설치·다중 모델·MCP·스냅샷 범위·해제·문제 해결은 [VS Code 상세 안내](docs/vscode.md)를 읽어 주세요.
 
 ## 1. 준비와 설치
 
-필요한 것은 **Node.js 22 이상**, PATH에서 찾을 수 있는 **공식 Codex CLI 0.163.0 이상**, 그리고 **Responses API와 스트리밍을 지원하는 모델 서버**입니다. 현재 네이티브 통합 검증 버전은 Codex 0.163.0입니다. 다른 버전은 옵션·설정 동작이 달라질 수 있습니다.
+CLI 실행에 필요한 것은 **Node.js 22 이상**, PATH에서 찾을 수 있는 **공식 Codex CLI 0.163.0 이상**, 그리고 **Responses API와 스트리밍을 지원하는 모델 서버**입니다. VS Code 연동은 해당 확장이 번들한 app-server를 사용합니다. CLI 네이티브 통합 검증 버전은 Codex 0.163.0입니다. 다른 버전은 옵션·설정 동작이 달라질 수 있습니다.
 
 ```sh
 node --version
@@ -152,7 +180,7 @@ stdio와 Streamable HTTP를 지원하며 `type: "sse"`, 인라인 `env`·`http_h
 
 ## 기존 Codex 설정은 어떻게 되나요?
 
-Codexing은 `CODEX_HOME`을 변경하지 않습니다. 지정돼 있으면 해당 Codex 홈을 그대로 쓰고, 지정하지 않으면 네이티브 기본 홈을 사용합니다. 사용자·신뢰된 프로젝트 설정과 AGENTS·스킬·플러그인도 Codex 자체 규칙을 따릅니다. `~/.codexing`은 일반 사용자 홈에 고정되며 `CODEX_HOME`과 별개입니다.
+일반 CLI 실행에서 Codexing은 `CODEX_HOME`을 변경하지 않습니다. 지정돼 있으면 해당 Codex 홈을 그대로 쓰고, 지정하지 않으면 네이티브 기본 홈을 사용합니다. 사용자·신뢰된 프로젝트 설정과 AGENTS·스킬·플러그인도 Codex 자체 규칙을 따릅니다. `~/.codexing`은 일반 사용자 홈에 고정되며 `CODEX_HOME`과 별개입니다. VS Code의 Codexing 모드는 선택기 설정 저장을 격리하기 위해 [별도 홈과 스냅샷](docs/vscode.md)을 사용합니다.
 
 선택한 모델과 provider, 지정한 컨텍스트 크기는 CLI 설정으로 기존 기본값보다 우선합니다. 기타 설정은 상속됩니다. 시스템·조직 강제 정책은 CLI보다 우선할 수 있습니다. **관리형 환경에서 provider 강제 정책이 있으면 Codexing으로 라우팅을 보장할 수 없으므로 사용하지 마세요.** 네이티브 Codex는 세션·로그·캐시 등 정상 상태 파일을 기록할 수 있습니다. 런처가 전체 Codex 홈을 읽기 전용으로 만드는 것은 아닙니다.
 

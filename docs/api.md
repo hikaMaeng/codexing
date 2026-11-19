@@ -36,3 +36,9 @@ command/url은 정확히 하나가 필요하다. 상대 MCP 경로는 선택한 
 허용된 `-c`와 profile 옵션은 루트로 모으고 나머지 인자는 배열 순서를 보존한다. `--config` 키는 unquoted dotted ASCII key만 허용한다. model/review_model/model_provider/model_providers/model_context_window/mcp_servers/profile(s)/forced_login_method/forced_chatgpt_workspace_id/cli_auth_credentials_store/chatgpt_base_url/openai_base_url 및 하위 키는 거절한다. `--model`/`-m`, `--oss`, `--local-provider`, `--remote`, `--remote-auth-token-env`, `--cd`/`-C`도 거절한다.
 
 네이티브 관리 명령은 `codex` 직접 실행 대상이다. 일반 대화와 exec/review/resume/fork/help를 위한 런처다. 유효하지 않은 나머지 옵션은 Codex가 판정한다. 자식 숫자 종료 코드는 그대로 반환하며 런처 오류는 1이다.
+
+## VS Code 진입점
+
+`codexing /vscode [--select-model <index|id> | --openai | --off | --status] [--settings <User/settings.json>] [--extension <official-extension-directory>]`
+
+`/vscode`는 첫 인자일 때만 관리 명령으로 처리한다. `--on`은 기본 동작의 명시형이다. 모드 변경은 다음 app-server에 적용되며 CLI 실행의 모델/환경은 바꾸지 않는다. `~/.codexing/vscode.json`에 enabled/modelSelector/nativeExecutable/extensionPath/providerNamespace를 저장한다. 상세 동작·스냅샷·지원 버전은 [vscode.md](vscode.md)를 따른다.

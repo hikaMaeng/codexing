@@ -5,7 +5,7 @@
   "type": "module",
   "bin": { "codexing": "bin/codexing.js" },
   "files": ["bin", "lib", "docs"],
-  "scripts": { "test": "node --test test/*.test.js", "test:native": "node --test test/native.integration.js" },
+  "scripts": { "test": "node --test test/*.test.js", "test:native": "node --test test/native.integration.js", "test:vscode": "node --test test/vscode.integration.js" },
   "engines": { "node": ">=22" },
   "license": "UNLICENSED",
   "repository": { "type": "git", "url": "git+https://github.com/hikaMaeng/codexing.git" },

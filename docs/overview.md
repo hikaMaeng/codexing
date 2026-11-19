@@ -10,3 +10,5 @@ Codexing은 공식 Codex CLI를 재사용하는 독립 Node.js 런처다. 로컬
 | 사용자 | Codex/서버 설치, 토큰·MCP 실행파일, 네이티브 권한 정책 |
 
 Codex·모델·서버를 묶어 배포하지 않는다. 원본 Clauding 저장소와 독립적이며 Anthropic 환경변수를 사용하지 않는다. npm 레지스트리 게시 없이 GitHub 설치와 npm pack을 지원한다.
+
+선택적 [공식 VS Code 연동](vscode.md)은 해당 확장의 개발용 실행파일 설정과 번들 app-server를 재사용한다. 확장 파일·인증 응답을 변경하지 않는다. 모델 카탈로그와 프로세스 단위 모드 전환을 제공하며, IDE 기본값 저장은 별도 Codex 홈으로 분리한다.

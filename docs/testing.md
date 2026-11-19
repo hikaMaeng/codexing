@@ -3,6 +3,7 @@
 ```sh
 npm test
 npm run test:native
+npm run test:vscode
 npm pack --dry-run
 ```
 
@@ -21,3 +22,13 @@ npm pack --dry-run
 - POSIX parent-only signal process 검사는 Windows에서 skip. 단위 signal forwarding/escalation 및 실제 child 숫자 exit 검사는 Windows에서 실행.
 
 README의 명령/API/보안 경계는 테스트와 함께 유지한다. 네이티브 옵션·schema·policy 변경 후에는 설치 CLI와 native integration을 다시 확인한다. npm pack에는 bin/lib/docs와 자동 포함 README/package.json만 들어가며 테스트·임시 홈·토큰을 배포하지 않는다.
+
+## 2026-11-19 VS Code 연동 검증
+
+- Windows 기본 검사 26개 중 25개 통과, POSIX 전용 1개 skip. JSONC 댓글·원본 바이트 복원, 외부 편집 보존, 다중 파일 커밋 실패 롤백, 동일 wrapper 전환 시 settings 재쓰기 생략, 한글 경로/리터럴 argv/바이트 스트림을 검사.
+- `npm run test:vscode`: 설치된 공식 확장 26.1111.21308의 번들 app-server 0.169.0-alpha.11.1을 실제 Windows exe 어댑터로 실행. 격리 홈에서 no-account/requiresOpenaiAuth=false, 두 native picker 모델, 각 모델별 mock Responses 경로, 기존/추가 MCP, picker 설정 저장 격리, OpenAI 모드 requires-auth, 등록 해제를 검증.
+- 실제 사용자 서버 qwen36-35b의 `CODEXING_VSCODE_OK`, 기존 OpenAI 계정 gpt-6.2-sol의 `OPENAI_VSCODE_OK` 응답을 app-server로 확인. 원래 Codex config/auth와 기존 Codexing config/MCP는 해시 보존 확인. 이 실제 서버 검사는 일반 npm 테스트가 자동 재실행하지 않는다.
+- 격리 VS Code 프로필의 공식 확장 로그에서 app-server spawn/initialize와 추가 websearch MCP 발견 확인. 다른 앱의 Windows 보안창이 화면을 가려 GUI 메시지 클릭·응답 표시는 미검증. 보안창을 조작하지 않고 화면 제어 해제.
+- `model_catalog_json` 없이 model만 지정하면 로컬 ID가 native model/list에 추가되지 않음을 확인. app-server의 --profile 미지원도 실제 실행으로 확인하여 IDE 전용 CODEX_HOME으로 설정 저장을 격리함.
+
+GUI 성공·native protocol 성공·mock 결과·실제 서버 결과를 합쳐 보고하지 않는다. 모드/서버 그룹 전환 뒤 새 프로세스와 새 대화가 필요하다. [전체 지원 범위](vscode.md).

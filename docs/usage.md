@@ -20,3 +20,5 @@ Codex 옵션은 설치 CLI의 help를 기준으로 선택한다. 저장소 밖�
 PowerShell에서 MCP용 환경변수는 `$env:TEAM_MCP_TOKEN = '...'`처럼 현재 셸에 설정한다. URL/command args에 비밀값을 넣지 않는다. `OPENAI_BASE_URL`·`CODEX_API_KEY` 충돌은 현재 셸에서 `Remove-Item Env:OPENAI_BASE_URL` 등으로 해제할 수 있다. 런처는 영구 환경변수나 설정파일을 고치지 않는다.
 
 사용자·프로젝트 AGENTS와 스킬은 Codex 표준 위치에 둔다. Codexing 전용 AGENTS/skills 디렉터리를 새로 만드는 기능은 없다. MCP 추가만 `~/.codexing/mcp.json`으로 분리한다. 기존 설정을 확인·관리할 때는 `codex mcp list`, `codex login` 등 네이티브 명령을 사용한다.
+
+위 지침 상속은 일반 CLI 기준이다. 공식 IDE 연동은 `codexing /vscode`, 원래 OpenAI 모드는 `/vscode --openai`, 해제는 `/vscode --off`다. Codexing IDE 모드는 전용 Codex 홈에 설정·guidance/rules를 스냅샷으로 가져오므로 [VS Code 안내](vscode.md)의 상속 범위를 확인한다. 모드/그룹을 변경하면 대상 창을 재로드하고 새 대화를 연다.
